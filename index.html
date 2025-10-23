@@ -43,7 +43,7 @@
     <div class="container">
       <div class="row align-items-center">
         <div class="col-lg-7">
-          <h1 class="display-5 fw-bold">Επεκτάσεις turbowarp για τα κιτ Ρομποτικής S1, R2, Gigo</h1>
+          <h1 class="display-5 fw-bold">Επεκτάσεις turbowarp για τα κιτ Ρομποτικής S1, R2, Gigo (online mode)</h1>
           <p class="lead my-4">Οι παρακάτω επεκτάσεις επιτρέπουν τη χρήση των κιτ Ρομποτικής S1, R2, Gigo (Δημοτικού σχολείου) σε συνδυασμό με την εφαρμογή <a href="https://turbowarp.org/editor" target="_blank">Turbowarp</a> σε <span class="fw-bold">online mode!</span>.</p>
 
           <div class="d-flex gap-2">
@@ -70,7 +70,15 @@
       <section id="s1" class="py-5">
         <div class="text-center mb-5">
           <h2 class="fw-bold">S1 + Turbowarp</h2>
-          <p class="text-muted">S1 + Turbowarp.</p>
+          <p class="text-muted">
+              S1 + Turbowarp.<br/>
+              Η ενεργοποίηση του πρόσθετου γίνεται σε 2 βήματα: <br />
+              (0) Αντιγραφή του κώδικα <b>s1-arduino.ino</b> και φόρτωση του μέσω του <a href="https://www.arduino.cc/en/software/" target="_blank">Arduino IDE</a>. Αυτό το βήμα γίνεται μια
+              φορά, εφόσον δεν φορτωθεί κάποιος άλλος κώδικας στο Arduino. <br />
+              (1) Αντιγραφή του αρχείου <b>s1-tubowarp.js</b>. Επίσκεψη στη σελίδα του <a href="https://turbowarp.org/editor" target="_blank">Turbowarp Editor</a>, κλικ στο εικονίδιο
+              "Προσθήκη επέκτασης", Custom Extension, Text και επικόλληση μέσα στο text box. <b>Δεν ξεχνάμε να κάνουμε check στο Run without sandbox</b>, πριν
+              πατήσουμε το κουμπί Load.
+          </p>
         </div>
 
         <!-- ========== FIRST SNIPPET (JS) ========== -->
@@ -115,10 +123,11 @@
       <section id="r2" class="py-5">
         <div class="text-center mb-5">
           <h2 class="fw-bold">R2 + Turbowarp</h2>
-          <p class="text-muted">R2 + Turbowarp.</p>
+          <p class="text-muted">R2 + Turbowarp.<br />
+          Work in progress...</p>
         </div>
 
-        <!-- ========== FIRST SNIPPET (JS) ========== -->
+        <!--
         <div class="snippet-wrap" data-url="code/r2-turbowarp.js">
           <div class="snippet-header">
             <strong>r2-turbowarp.js</strong>
@@ -136,7 +145,6 @@
           </code></pre>
         </div>
 
-        <!-- ========== SECOND SNIPPET (Arduino C) ========== -->
         <div class="snippet-wrap" data-url="code/r2-arduino.ino">
           <div class="snippet-header">
             <strong>r2-arduino.ino</strong>
@@ -154,16 +162,18 @@
             }
           </code></pre>
         </div>
+        -->
       </section>
 
       <!-- Gigo -->
       <section id="gigo" class="py-5">
         <div class="text-center mb-5">
           <h2 class="fw-bold">Gigo + Turbowarp</h2>
-          <p class="text-muted">Gigo + Turbowarp.</p>
+          <p class="text-muted">Gigo + Turbowarp. <br>
+          Work in progress...</p>
         </div>
 
-        <!-- ========== FIRST SNIPPET (JS) ========== -->
+        <!--
         <div class="snippet-wrap" data-url="code/gigo-turbowarp.js">
           <div class="snippet-header">
             <strong>gigo-turbowarp.js</strong>
@@ -181,7 +191,7 @@
           </code></pre>
         </div>
 
-        <!-- ========== SECOND SNIPPET (Arduino C) ========== -->
+        
         <div class="snippet-wrap" data-url="code/gigo-microbit.ino">
           <div class="snippet-header">
             <strong>gigo-microbit.ino</strong>
@@ -199,6 +209,7 @@
             }
           </code></pre>
         </div>
+      -->
       </section>
 
     </div>
