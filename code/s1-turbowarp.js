@@ -265,11 +265,6 @@ class ArduinoWebSerial {
             }
           }
         },
-
-
-
-
-
         {
           opcode: 'send',
           blockType: Scratch.BlockType.COMMAND,

@@ -72,6 +72,30 @@ while True:
                 if (arg0 == "H"):
                     pin1.set_analog_period(20)
                     pin1.write_analog(pulse)
+            elif cmd == "BTN":
+                if (arg0 == "A"):
+                    pin20.set_pull(pin20.PULL_UP)
+                    value = pin20.read_digital()
+                    print(value)
+                if (arg0 == "E"):
+                    pin16.set_pull(pin16.PULL_UP)
+                    value = pin16.read_digital()
+                    print(value)
+                if (arg0 == "F"):
+                    pin14.set_pull(pin14.PULL_UP)
+                    value = pin14.read_digital()
+                    print(value)
+                if (arg0 == "G"):
+                    pin2.set_pull(pin2.PULL_UP)
+                    value = pin2.read_digital()
+                    print(value)
+                if (arg0 == "H"):
+                    pin8.set_pull(pin8.PULL_UP)
+                    value = pin8.read_digital()
+                    print(value)
+            elif cmd == "LIG":
+                level = display.read_light_level()
+                print(level)
             else:
                 uart.write("Unknown command: {}\n".format(command))
                 display.show(command)
