@@ -4,7 +4,7 @@ class MicrobitTurbowarpExtension {
     this.reader = null;
     this.writer = null;
     this.textDecoder = new TextDecoder();
-    this.debug = true;
+    this.debug = false;
   }
 
   getInfo() {
@@ -230,8 +230,8 @@ class MicrobitTurbowarpExtension {
     let retval = false;
     if (result.includes('0')) 
       retval = true;
-    
-    console.log(retval);
+    if (this.debug)
+      console.log(retval);
     return retval;
     
   }
