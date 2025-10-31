@@ -1,18 +1,16 @@
 class MicrobitTurbowarpExtension {
-  constructor(runtime) {
-    this.runtime = runtime;
+  constructor() {
     this.port = null;
     this.reader = null;
     this.writer = null;
-    this.textDecoder = new TextDecoderStream();
-    this.inputDone = null;
-    this.inputStream = null;
+    this.textDecoder = new TextDecoder();
+    this.debug = true;
   }
 
   getInfo() {
     return {
-      id: 'microbitLED',
-      name: 'Microbit LED',
+      id: 'microbitGigo',
+      name: 'Microbit Gigo',
       color1: '#FF8000',
       blocks: [
         {
@@ -95,70 +93,91 @@ class MicrobitTurbowarpExtension {
     };
   }
 
-  async connect() {
-    try {
-      this.port = await navigator.serial.requestPort();
-      await this.port.open({ baudRate: 9600 });
-
-      // Stream decoder for text
-      this.inputDone = this.port.readable.pipeTo(this.textDecoder.writable);
-      this.inputStream = this.textDecoder.readable;
-      this.reader = this.inputStream.getReader();
-
-      // Writer setup
-      this.writer = this.port.writable.getWriter();
-
-      console.log('✅ Συνδέθηκε με το micro:bit');
-    } catch (err) {
-      console.error('Σφάλμα σύνδεσης:', err);
+  async ensureConnection() {
+    if (this.port) return true;
+    const ports = await navigator.serial.getPorts();
+    if (ports.length > 0) {
+      this.port = ports[0];
+      await this.port.open({ baudRate: 115200 });
+      return this.setupStreams();
     }
+    return false;
   }
 
-  // --- Utility: Safe line reader with timeout ---
-  async readLine(timeout = 1000) {
-    if (!this.reader) return '';
-    let result = '';
-    const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(''), timeout));
+  async setupStreams() {
+    const textDecoder = new TextDecoderStream();
+    const textEncoder = new TextEncoderStream();
 
-    const readPromise = (async () => {
-      while (true) {
-        const { value, done } = await this.reader.read();
-        if (done) break;
-        result += value;
-        if (result.includes('\n')) break;
+    this.port.readable.pipeTo(textDecoder.writable);
+    textEncoder.readable.pipeTo(this.port.writable);
+
+    this.reader = textDecoder.readable.getReader();
+    this.writer = textEncoder.writable.getWriter();
+    alert('Συνδέθηκε στο micro:bit!');
+  }
+
+  async connect() {
+    try {
+      if (!(await this.ensureConnection())) {
+        if (!this.port) {
+          this.port = await navigator.serial.requestPort();
+          await this.port.open({ baudRate: 115200 });
+          await this.setupStreams();
+        }
       }
-      return result.trim();
-    })();
-
-    return Promise.race([readPromise, timeoutPromise]);
+    } catch (err) {
+      alert('Η σύνδεση απέτυχε: ' + err.message);
+    }
+    // Alec - this is needed for reconnecting successfully
+    try {
+      if ( (!this.writer) || (!this.reader) ) 
+        await this.setupStreams();
+    } catch (e) {
+      alert(e);
+    }
   }
 
   // --- Command blocks ---
   async clearLED() {
-    await this._sendCommand('CLS\n');
+    const cmd = 'CLS\n';
+    if (this.debug)
+      console.log(cmd);
+    await this.writer.write(cmd);
   }
 
   async setLED(args) {
     const { X, Y, STATE } = args;
     const micState = STATE === 'άναψε' ? 'on' : 'off';
-    await this._sendCommand(`LED ${X} ${Y} ${micState}\n`);
+    const cmd = 'LED ' + X + ' ' + Y + ' ' + micState + '\n';
+    if (this.debug)
+      console.log(cmd);
+    await this.writer.write(cmd + '\n');
   }
 
   async setLEX(args) {
     const { PIN, STATE } = args;
     const micState = STATE === 'άναψε' ? '1' : '0';
-    await this._sendCommand(`LEX ${PIN} ${micState}\n`);
+    const cmd = 'LEX ' + PIN + ' ' + micState + '\n';
+    if (this.debug)
+      console.log(cmd);
+    await this.writer.write(cmd + '\n');
   }
 
   async setMotor(args) {
     const { PIN, DIRECTION, SPEED } = args;
     const direction = DIRECTION === 'ρολογιού' ? 1 : 0;
-    await this._sendCommand(`MOT ${PIN} ${direction} ${SPEED}\n`);
+    const cmd = 'MOT ' + PIN + ' ' + direction + ' ' + SPEED + '\n';
+    if (this.debug)
+      console.log(cmd);
+    await this.writer.write(cmd + '\n');
   }
 
   async setServo(args) {
     const { PIN, ANGLE } = args;
-    await this._sendCommand(`SRV ${PIN} x ${ANGLE}\n`);
+    const cmd = 'SRV ' + PIN + ' x ' + ANGLE + '\n'; // x is just a placeholder in order to skip arg1 in micropython serial backend app
+    if (this.debug)
+      console.log(cmd);
+    await this.writer.write(cmd + '\n');
   }
   
   
@@ -167,14 +186,19 @@ class MicrobitTurbowarpExtension {
       alert('Χωρίς σύνδεση με το micro:bit!');
       return false;
     }
-    const cmd = `LIG\n`;
+    const cmd = 'LIG\n';
+    if (this.debug)
+      console.log(cmd);
+    await this.writer.write(cmd);
 
-    await this.writer.write(new TextEncoder().encode(cmd));
-    console.log('🟢 Sent:', cmd);
-
-    const line = await this.readLine(1000);
-    console.log('🔵 Read:', JSON.stringify(line));
-    return line;
+    let result = '';
+    while (true) {
+      const { value, done } = await this.reader.read();
+      if (done) break;
+      result += value;
+      if (result.includes('\n')) break; // got full line
+    }
+    return result;
   }
 
   async isTouchPressed(args) {
@@ -183,28 +207,39 @@ class MicrobitTurbowarpExtension {
       return false;
     }
 
-    const cmd = `BTN ${args.PIN}\n`;
-    await this.writer.write(new TextEncoder().encode(cmd));
-    console.log('🟢 Sent:', cmd);
+    const cmd = 'BTN ' + args.PIN + '\n';
+    if (this.debug)
+      console.log(cmd);
+    // alec - wait 100ms before sending the command in the serial console
+    await new Promise(resolve => setTimeout(resolve, 100));
 
-    const line = await this.readLine(1000);
-    console.log('🔵 Read:', JSON.stringify(line));
+    await this.writer.write(cmd);
+    // alec - wait another 100ms before reading back the value
+    await new Promise(resolve => setTimeout(resolve, 100));
 
-    if (line.includes('1')) return false;
-    if (line.includes('0')) return true;
-    return false;
-  }
-
-  // --- Helper function to send any command ---
-  async _sendCommand(cmd) {
-    if (!this.writer) {
-      alert('Χωρίς σύνδεση με το micro:bit!');
-      return;
+    let result = '';
+    while (true) {
+      const { value, done } = await this.reader.read();
+      if (done) break;
+      result += value;
+      if (result.includes('\n')) break; // got full line
     }
-    const data = new TextEncoder().encode(cmd);
-    console.log('➡️ Send:', cmd.trim());
-    await this.writer.write(data);
+    //if (result.includes('1')) return false;
+    //if (result.includes('0')) return true;
+    
+    let retval = false;
+    if (result.includes('0')) 
+      retval = true;
+    
+    console.log(retval);
+    return retval;
+    
   }
+
+  delay(ms, value) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+  
 }
 
 Scratch.extensions.register(new MicrobitTurbowarpExtension());
